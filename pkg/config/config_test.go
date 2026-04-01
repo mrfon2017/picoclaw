@@ -126,16 +126,6 @@ func TestAgentConfig_FullParse(t *testing.T) {
 				}
 			]
 		},
-		"bindings": [
-			{
-				"agent_id": "support",
-				"match": {
-					"channel": "telegram",
-					"account_id": "*",
-					"peer": {"kind": "direct", "id": "user123"}
-				}
-			}
-		],
 		"session": {
 			"dimensions": ["sender"],
 			"identity_links": {
@@ -175,9 +165,9 @@ func TestAgentConfig_FullParse(t *testing.T) {
 		t.Errorf("support.Subagents = %+v", support.Subagents)
 	}
 
-		if len(cfg.Session.Dimensions) != 1 || cfg.Session.Dimensions[0] != "sender" {
-			t.Errorf("Session.Dimensions = %v", cfg.Session.Dimensions)
-		}
+	if len(cfg.Session.Dimensions) != 1 || cfg.Session.Dimensions[0] != "sender" {
+		t.Errorf("Session.Dimensions = %v", cfg.Session.Dimensions)
+	}
 	if len(cfg.Session.IdentityLinks) != 1 {
 		t.Errorf("Session.IdentityLinks = %v", cfg.Session.IdentityLinks)
 	}
@@ -206,6 +196,60 @@ func TestConfig_BackwardCompat_NoAgentsList(t *testing.T) {
 
 	if len(cfg.Agents.List) != 0 {
 		t.Errorf("agents.list should be empty for backward compat, got %d", len(cfg.Agents.List))
+	}
+}
+
+func TestAgentConfig_ParsesDispatchRules(t *testing.T) {
+	jsonData := `{
+		"agents": {
+			"defaults": {
+				"workspace": "~/.picoclaw/workspace",
+				"model": "glm-4.7"
+			},
+			"list": [
+				{ "id": "main", "default": true },
+				{ "id": "support" }
+			],
+			"dispatch": {
+				"rules": [
+					{
+						"name": "support-vip",
+						"agent": "support",
+						"when": {
+							"channel": "telegram",
+							"chat": "group:-100123",
+							"sender": "12345",
+							"mentioned": true
+						},
+						"session_dimensions": ["chat", "sender"]
+					}
+				]
+			}
+		}
+	}`
+
+	cfg := DefaultConfig()
+	if err := json.Unmarshal([]byte(jsonData), cfg); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if cfg.Agents.Dispatch == nil {
+		t.Fatal("Agents.Dispatch should not be nil")
+	}
+	if len(cfg.Agents.Dispatch.Rules) != 1 {
+		t.Fatalf("Dispatch.Rules len = %d, want 1", len(cfg.Agents.Dispatch.Rules))
+	}
+	rule := cfg.Agents.Dispatch.Rules[0]
+	if rule.Name != "support-vip" || rule.Agent != "support" {
+		t.Fatalf("rule = %+v", rule)
+	}
+	if rule.When.Channel != "telegram" || rule.When.Chat != "group:-100123" || rule.When.Sender != "12345" {
+		t.Fatalf("rule.When = %+v", rule.When)
+	}
+	if rule.When.Mentioned == nil || !*rule.When.Mentioned {
+		t.Fatalf("rule.When.Mentioned = %+v, want true", rule.When.Mentioned)
+	}
+	if got := rule.SessionDimensions; len(got) != 2 || got[0] != "chat" || got[1] != "sender" {
+		t.Fatalf("rule.SessionDimensions = %v, want [chat sender]", got)
 	}
 }
 
@@ -964,7 +1008,6 @@ func TestLoadConfig_TelegramPlaceholderTextAcceptsSingleString(t *testing.T) {
 	data := `{
 		"version": 1,
 		"agents": { "defaults": { "workspace": "", "model": "", "max_tokens": 0, "max_tool_iterations": 0 } },
-		"bindings": [],
 		"session": {},
 		"channels": {
 			"telegram": {

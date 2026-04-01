@@ -122,13 +122,76 @@ dammi le ultime news
 
 ### Routing
 
-The legacy `bindings` configuration has been removed from `config.json`.
+Routing is configured through `agents.dispatch.rules`.
 
-Current routing always resolves to the configured default agent. Session
-segmentation remains configurable through `session.dimensions`.
+Each rule matches against the normalized inbound context produced by channels.
+Rules are evaluated from top to bottom. The first matching rule wins. If no
+rule matches, PicoClaw falls back to the configured default agent.
 
-The next-generation binding and routing system will be introduced through a new
-schema rather than extending the removed `bindings` format.
+Supported match fields:
+
+* `channel`
+* `account`
+* `space`
+* `chat`
+* `topic`
+* `sender`
+* `mentioned`
+
+Match values use the same scope vocabulary as the session system:
+
+* `space`: `workspace:t001`, `guild:123456`
+* `chat`: `direct:user123`, `group:-100123`, `channel:c123`
+* `topic`: `topic:42`
+* `sender`: a normalized sender identifier for the platform
+
+Rules may optionally override the global `session.dimensions` value through
+`session_dimensions`. This allows routing and session allocation to stay aligned
+without reintroducing the old `bindings` or `dm_scope` formats.
+
+Example:
+
+```json
+{
+  "agents": {
+    "list": [
+      { "id": "main", "default": true },
+      { "id": "support" },
+      { "id": "sales" }
+    ],
+    "dispatch": {
+      "rules": [
+        {
+          "name": "vip in support group",
+          "agent": "sales",
+          "when": {
+            "channel": "telegram",
+            "chat": "group:-1001234567890",
+            "sender": "12345"
+          },
+          "session_dimensions": ["chat", "sender"]
+        },
+        {
+          "name": "telegram support group",
+          "agent": "support",
+          "when": {
+            "channel": "telegram",
+            "chat": "group:-1001234567890"
+          },
+          "session_dimensions": ["chat"]
+        }
+      ]
+    }
+  },
+  "session": {
+    "dimensions": ["chat"]
+  }
+}
+```
+
+In the example above, the VIP rule must appear before the broader group rule.
+Because routing is strictly ordered, more specific rules should be placed
+earlier and broader fallback rules later.
 
 ### 🔒 Security Sandbox
 

@@ -71,6 +71,122 @@ func TestResolveRoute_UsesNormalizedInboundContextFields(t *testing.T) {
 	}
 }
 
+func TestResolveRoute_DispatchFirstMatchWins(t *testing.T) {
+	cfg := testConfig([]config.AgentConfig{
+		{ID: "main", Default: true},
+		{ID: "support"},
+		{ID: "sales"},
+	})
+	cfg.Agents.Dispatch = &config.DispatchConfig{
+		Rules: []config.DispatchRule{
+			{
+				Name:  "support-group",
+				Agent: "support",
+				When: config.DispatchSelector{
+					Channel: "telegram",
+					Chat:    "group:-100123",
+				},
+			},
+			{
+				Name:  "vip-in-group",
+				Agent: "sales",
+				When: config.DispatchSelector{
+					Channel: "telegram",
+					Chat:    "group:-100123",
+					Sender:  "12345",
+				},
+			},
+		},
+	}
+	r := NewRouteResolver(cfg)
+
+	route := r.ResolveRoute(bus.InboundContext{
+		Channel:  "telegram",
+		ChatID:   "-100123",
+		ChatType: "group",
+		SenderID: "12345",
+	})
+
+	if route.AgentID != "support" {
+		t.Fatalf("AgentID = %q, want support", route.AgentID)
+	}
+	if route.MatchedBy != "dispatch.rule:support-group" {
+		t.Fatalf("MatchedBy = %q, want dispatch.rule:support-group", route.MatchedBy)
+	}
+}
+
+func TestResolveRoute_DispatchOverridesSessionDimensions(t *testing.T) {
+	cfg := testConfig([]config.AgentConfig{
+		{ID: "main", Default: true},
+		{ID: "support"},
+	})
+	cfg.Session.Dimensions = []string{"chat"}
+	cfg.Agents.Dispatch = &config.DispatchConfig{
+		Rules: []config.DispatchRule{
+			{
+				Name:  "support-dm",
+				Agent: "support",
+				When: config.DispatchSelector{
+					Channel: "telegram",
+					Chat:    "direct:user-1",
+				},
+				SessionDimensions: []string{"chat", "sender"},
+			},
+		},
+	}
+	r := NewRouteResolver(cfg)
+
+	route := r.ResolveRoute(bus.InboundContext{
+		Channel:  "telegram",
+		ChatID:   "user-1",
+		ChatType: "direct",
+		SenderID: "user-1",
+	})
+
+	if route.AgentID != "support" {
+		t.Fatalf("AgentID = %q, want support", route.AgentID)
+	}
+	if got := route.SessionPolicy.Dimensions; len(got) != 2 || got[0] != "chat" || got[1] != "sender" {
+		t.Fatalf("SessionPolicy.Dimensions = %v, want [chat sender]", got)
+	}
+}
+
+func TestResolveRoute_DispatchMentionedRule(t *testing.T) {
+	cfg := testConfig([]config.AgentConfig{
+		{ID: "main", Default: true},
+		{ID: "support"},
+	})
+	mentioned := true
+	cfg.Agents.Dispatch = &config.DispatchConfig{
+		Rules: []config.DispatchRule{
+			{
+				Name:  "slack-mentions",
+				Agent: "support",
+				When: config.DispatchSelector{
+					Channel:   "slack",
+					Space:     "workspace:t001",
+					Mentioned: &mentioned,
+				},
+			},
+		},
+	}
+	r := NewRouteResolver(cfg)
+
+	route := r.ResolveRoute(bus.InboundContext{
+		Channel:   "slack",
+		ChatID:    "C123",
+		ChatType:  "channel",
+		SpaceID:   "T001",
+		SpaceType: "workspace",
+		SenderID:  "U123",
+		Mentioned: true,
+	})
+
+	if route.AgentID != "support" {
+		t.Fatalf("AgentID = %q, want support", route.AgentID)
+	}
+}
+
 func TestResolveRoute_InvalidAgentFallsToDefault(t *testing.T) {
 	agents := []config.AgentConfig{
 		{ID: "main", Default: true},

@@ -755,12 +755,12 @@ func TestAppendEventContextFields_IncludesInboundRouteAndScope(t *testing.T) {
 			SenderID:  "U123",
 			Mentioned: true,
 		},
-			Route: &routing.ResolvedRoute{
-				AgentID:   "support",
-				Channel:   "slack",
-				AccountID: "workspace-a",
-				MatchedBy: "default",
-				SessionPolicy: routing.SessionPolicy{
+		Route: &routing.ResolvedRoute{
+			AgentID:   "support",
+			Channel:   "slack",
+			AccountID: "workspace-a",
+			MatchedBy: "default",
+			SessionPolicy: routing.SessionPolicy{
 				Dimensions: []string{"chat", "sender"},
 				IdentityLinks: map[string][]string{
 					"canonical-user": {"slack:U123"},
@@ -850,6 +850,74 @@ func TestResolveMessageRoute_UsesInboundContextAccount(t *testing.T) {
 	}
 	if route.AccountID != "workspace-a" {
 		t.Fatalf("AccountID = %q, want workspace-a", route.AccountID)
+	}
+}
+
+func TestResolveMessageRoute_UsesDispatchRulesInOrder(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfg := &config.Config{
+		Agents: config.AgentsConfig{
+			Defaults: config.AgentDefaults{
+				Workspace: tmpDir,
+				ModelName: "test-model",
+			},
+			List: []config.AgentConfig{
+				{ID: "main", Default: true},
+				{ID: "support"},
+				{ID: "sales"},
+			},
+			Dispatch: &config.DispatchConfig{
+				Rules: []config.DispatchRule{
+					{
+						Name:  "support-group",
+						Agent: "support",
+						When: config.DispatchSelector{
+							Channel: "telegram",
+							Chat:    "group:-100123",
+						},
+						SessionDimensions: []string{"chat"},
+					},
+					{
+						Name:  "vip-in-group",
+						Agent: "sales",
+						When: config.DispatchSelector{
+							Channel: "telegram",
+							Chat:    "group:-100123",
+							Sender:  "12345",
+						},
+						SessionDimensions: []string{"chat", "sender"},
+					},
+				},
+			},
+		},
+		Session: config.SessionConfig{
+			Dimensions: []string{"sender"},
+		},
+	}
+
+	msgBus := bus.NewMessageBus()
+	al := NewAgentLoop(cfg, msgBus, &simpleMockProvider{response: "ok"})
+
+	route, _, err := al.resolveMessageRoute(testInboundMessage(bus.InboundMessage{
+		Context: bus.InboundContext{
+			Channel:  "telegram",
+			ChatID:   "-100123",
+			ChatType: "group",
+			SenderID: "12345",
+		},
+		Content: "hello",
+	}))
+	if err != nil {
+		t.Fatalf("resolveMessageRoute() error = %v", err)
+	}
+	if route.AgentID != "support" {
+		t.Fatalf("AgentID = %q, want support", route.AgentID)
+	}
+	if route.MatchedBy != "dispatch.rule:support-group" {
+		t.Fatalf("MatchedBy = %q, want dispatch.rule:support-group", route.MatchedBy)
+	}
+	if got := route.SessionPolicy.Dimensions; len(got) != 1 || got[0] != "chat" {
+		t.Fatalf("SessionPolicy.Dimensions = %v, want [chat]", got)
 	}
 }
 

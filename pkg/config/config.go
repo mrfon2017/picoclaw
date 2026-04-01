@@ -117,8 +117,9 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 }
 
 type AgentsConfig struct {
-	Defaults AgentDefaults `json:"defaults"`
-	List     []AgentConfig `json:"list,omitempty"`
+	Defaults AgentDefaults   `json:"defaults"`
+	List     []AgentConfig   `json:"list,omitempty"`
+	Dispatch *DispatchConfig `json:"dispatch,omitempty"`
 }
 
 // AgentModelConfig supports both string and structured model config.
@@ -173,6 +174,27 @@ type AgentConfig struct {
 type SubagentsConfig struct {
 	AllowAgents []string          `json:"allow_agents,omitempty"`
 	Model       *AgentModelConfig `json:"model,omitempty"`
+}
+
+type DispatchConfig struct {
+	Rules []DispatchRule `json:"rules,omitempty"`
+}
+
+type DispatchRule struct {
+	Name              string           `json:"name,omitempty"`
+	Agent             string           `json:"agent"`
+	When              DispatchSelector `json:"when"`
+	SessionDimensions []string         `json:"session_dimensions,omitempty"`
+}
+
+type DispatchSelector struct {
+	Channel   string `json:"channel,omitempty"`
+	Account   string `json:"account,omitempty"`
+	Space     string `json:"space,omitempty"`
+	Chat      string `json:"chat,omitempty"`
+	Topic     string `json:"topic,omitempty"`
+	Sender    string `json:"sender,omitempty"`
+	Mentioned *bool  `json:"mentioned,omitempty"`
 }
 
 type SessionConfig struct {
