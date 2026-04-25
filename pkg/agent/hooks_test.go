@@ -1431,6 +1431,56 @@ func TestAgentLoop_HookRespond_SteeringSkipsRemaining(t *testing.T) {
 	}
 }
 
+func TestCloneStringAnyMap_EmptyMapReturnsNonNil(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   map[string]any
+		wantNil bool
+		wantLen int
+	}{
+		{
+			name:    "nil input returns empty map",
+			input:   nil,
+			wantNil: false,
+			wantLen: 0,
+		},
+		{
+			name:    "empty map returns empty map",
+			input:   map[string]any{},
+			wantNil: false,
+			wantLen: 0,
+		},
+		{
+			name:    "populated map is cloned",
+			input:   map[string]any{"key": "value"},
+			wantNil: false,
+			wantLen: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := cloneStringAnyMap(tt.input)
+			if result == nil {
+				t.Fatal("cloneStringAnyMap returned nil — MCP tool calls " +
+					"with no arguments would send null instead of {}")
+			}
+			if len(result) != tt.wantLen {
+				t.Fatalf("expected len %d, got %d", tt.wantLen, len(result))
+			}
+		})
+	}
+
+	t.Run("clone does not share underlying map", func(t *testing.T) {
+		src := map[string]any{"a": 1}
+		cloned := cloneStringAnyMap(src)
+		cloned["b"] = 2
+		if _, ok := src["b"]; ok {
+			t.Fatal("modifying clone should not affect source")
+		}
+	})
+}
+
 func filterEvents(events []Event, kind EventKind) []Event {
 	var result []Event
 	for _, evt := range events {

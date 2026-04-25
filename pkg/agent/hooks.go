@@ -868,7 +868,7 @@ func cloneLLMResponse(resp *providers.LLMResponse) *providers.LLMResponse {
 
 func cloneStringAnyMap(src map[string]any) map[string]any {
 	if len(src) == 0 {
-		return nil
+		return map[string]any{}
 	}
 
 	cloned := make(map[string]any, len(src))
