@@ -1,21 +1,21 @@
-# Long-term Memory
+# 🧠 AGENT LONG-TERM MEMORY (LTM)
 
-This file stores important information that should persist across sessions.
+## 👤 USER IDENTITY
+- **User:** Шеф
+- **Core Interests:** {{Криптовалюта, трейдинг, AI-архитектура}}
+- **Communication:** {{Технический}}
 
-## User Information
+## 🛠️ ENVIRONMENT & STACK
+- **OS/Platform:** {{Linux/Railway/Docker}}
+- **Main Tools:** {{Python, Go, PineScript, GitHub}}
+- **Active API Keys:** {{Список сервисов без самих ключей: Bybit, Polymarket, OpenAI}}
 
-(Important facts about user)
+## 📑 KNOWLEDGE BASE (STABLE)
+> В этом разделе хранятся неизменные факты и инструкции.
+- **Rule 0:** Никогда не галлюцинируй API-методы. Если не уверен — проси документацию.
+- **Rule 1:** При написании кода всегда используй модульную структуру.
 
-## Preferences
-
-(User preferences learned over time)
-
-## Important Notes
-
-(Things to remember)
-
-## Configuration
-
-- Model preferences
-- Channel settings
-- Skills enabled
+## 📜 SESSION LOG & DECISIONS (VOLATILE)
+> Этот раздел обновляется после каждого важного этапа.
+- **2026-04-28:** Реализована базовая структура MEMORY.md.
+- **Status:** Ожидание настройки парсера файлов.
