@@ -4,10 +4,12 @@ RUN apk add --no-cache git make
 
 WORKDIR /src
 
-COPY go.mod go.sum ./
-RUN go mod download
+ARG PICOCLAW_REPO=https://github.com/sipeed/picoclaw.git
+ARG PICOCLAW_BRANCH=main
 
-COPY . .
+RUN git clone --depth 1 --branch ${PICOCLAW_BRANCH} ${PICOCLAW_REPO} .
+
+RUN go mod download
 RUN make build
 
 FROM alpine:3.23
