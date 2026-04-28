@@ -1,7 +1,8 @@
 #!/bin/sh
 set -e
 
-PICOCLAW_HOME="${HOME}/.picoclaw"
+# Store everything on the persistent volume mounted at /data
+export PICOCLAW_HOME="/data/.picoclaw"
 
 mkdir -p "${PICOCLAW_HOME}/workspace"
 mkdir -p "${PICOCLAW_HOME}/sessions"
