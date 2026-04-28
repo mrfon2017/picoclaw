@@ -9,8 +9,8 @@ func serialGetTermios(fd int) (*unix.Termios, error) {
 }
 
 func serialSetSpeed(tio *unix.Termios, speed uint32) error {
-	tio.Ispeed = speed
-	tio.Ospeed = speed
+	tio.Ispeed = uint64(speed)
+	tio.Ospeed = uint64(speed)
 	return nil
 }
 
