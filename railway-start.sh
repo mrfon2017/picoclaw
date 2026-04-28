@@ -9,12 +9,32 @@ mkdir -p "${PICOCLAW_HOME}/cron"
 
 rm -f "${PICOCLAW_HOME}/.picoclaw.pid"
 
-# Create a minimal config.json if missing so env.Parse() is called by the Go config loader.
-# Without it, DefaultConfig() is returned directly and env vars like
-# PICOCLAW_GATEWAY_PORT / PICOCLAW_GATEWAY_HOST are ignored.
+# Generate config.json from env vars so env.Parse() is triggered and channels are configured.
+# Without a config file, DefaultConfig() is returned directly and env vars are ignored.
 if [ ! -f "${PICOCLAW_HOME}/config.json" ]; then
-    cat > "${PICOCLAW_HOME}/config.json" <<'EOF'
-{"version":3}
+    TELEGRAM_TOKEN="${PICOCLAW_CHANNELS_TELEGRAM_TOKEN:-}"
+    PROVIDER="${PICOCLAW_AGENTS_DEFAULTS_PROVIDER:-}"
+    MODEL="${PICOCLAW_AGENTS_DEFAULTS_MODEL:-}"
+
+    cat > "${PICOCLAW_HOME}/config.json" <<EOF
+{
+  "version": 3,
+  "agents": {
+    "defaults": {
+      "provider": "${PROVIDER}",
+      "model_name": "${MODEL}"
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "type": "telegram",
+      "settings": {
+        "token": "${TELEGRAM_TOKEN}"
+      }
+    }
+  }
+}
 EOF
 fi
 
