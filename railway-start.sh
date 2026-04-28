@@ -17,6 +17,7 @@ fi
 # Generate config.json if missing.
 # Channel Enabled and model API keys have no env tags in picoclaw Go code,
 # so they must be written to config.json directly from Railway env vars.
+# Note: top-level channels field is "channel_list" in version 3 Config struct.
 if [ ! -f "${PICOCLAW_HOME}/config.json" ]; then
     TELEGRAM_TOKEN="${PICOCLAW_CHANNELS_TELEGRAM_TOKEN:-}"
     OR_API_KEY="${PICOCLAW_PROVIDERS_OPENROUTER_API_KEY:-}"
@@ -41,7 +42,7 @@ if [ ! -f "${PICOCLAW_HOME}/config.json" ]; then
       "api_keys": ["${OR_API_KEY}"]
     }
   ],
-  "channels": {
+  "channel_list": {
     "telegram": {
       "enabled": true,
       "type": "telegram",
