@@ -10,8 +10,28 @@ mkdir -p "${PICOCLAW_HOME}/cron"
 
 # Seed default workspace files (MEMORY.md, AGENT.md, SOUL.md, skills/) on first run
 DEFAULT_WORKSPACE="/usr/local/share/picoclaw/workspace"
+WORKSPACE="${PICOCLAW_HOME}/workspace"
+
 if [ -d "${DEFAULT_WORKSPACE}" ]; then
-    cp -rn "${DEFAULT_WORKSPACE}/." "${PICOCLAW_HOME}/workspace/" 2>/dev/null || true
+    # Copy each file only if it doesn't exist yet (busybox-safe)
+    find "${DEFAULT_WORKSPACE}" -type d | while read dir; do
+        target="${WORKSPACE}${dir#${DEFAULT_WORKSPACE}}"
+        mkdir -p "$target"
+    done
+    find "${DEFAULT_WORKSPACE}" -type f | while read src; do
+        target="${WORKSPACE}${src#${DEFAULT_WORKSPACE}}"
+        if [ ! -f "$target" ]; then
+            cp "$src" "$target"
+        fi
+    done
+fi
+
+# Also place MEMORY.md at workspace root so the model can find it
+# regardless of whether it uses "MEMORY.md" or "memory/MEMORY.md"
+MEMORY_SRC="${WORKSPACE}/memory/MEMORY.md"
+MEMORY_ROOT="${WORKSPACE}/MEMORY.md"
+if [ -f "${MEMORY_SRC}" ] && [ ! -f "${MEMORY_ROOT}" ]; then
+    ln -sf "${MEMORY_SRC}" "${MEMORY_ROOT}"
 fi
 
 rm -f "${PICOCLAW_HOME}/.picoclaw.pid"
