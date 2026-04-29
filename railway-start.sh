@@ -8,6 +8,12 @@ mkdir -p "${PICOCLAW_HOME}/workspace"
 mkdir -p "${PICOCLAW_HOME}/sessions"
 mkdir -p "${PICOCLAW_HOME}/cron"
 
+# Seed default workspace files (MEMORY.md, AGENT.md, SOUL.md, skills/) on first run
+DEFAULT_WORKSPACE="/usr/local/share/picoclaw/workspace"
+if [ -d "${DEFAULT_WORKSPACE}" ]; then
+    cp -rn "${DEFAULT_WORKSPACE}/." "${PICOCLAW_HOME}/workspace/" 2>/dev/null || true
+fi
+
 rm -f "${PICOCLAW_HOME}/.picoclaw.pid"
 
 # Force config regeneration if RESET_CONFIG=1 is set

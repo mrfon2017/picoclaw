@@ -17,6 +17,7 @@ FROM alpine:3.23
 RUN apk add --no-cache ca-certificates tzdata curl
 
 COPY --from=builder /src/build/picoclaw /usr/local/bin/picoclaw
+COPY --from=builder /src/workspace /usr/local/share/picoclaw/workspace
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY railway-start.sh /railway-start.sh
 RUN chmod +x /entrypoint.sh /railway-start.sh
