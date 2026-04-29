@@ -26,19 +26,23 @@ if [ -d "${DEFAULT_WORKSPACE}" ]; then
     done
 fi
 
-# Ensure memory dir and MEMORY.md always exist
+# Ensure memory dir exists
 mkdir -p "${WORKSPACE}/memory"
-if [ ! -f "${WORKSPACE}/memory/MEMORY.md" ]; then
-    cat > "${WORKSPACE}/memory/MEMORY.md" <<'MEMEOF'
-# Agent Long-Term Memory
 
-<!-- picoclaw writes important facts here between conversations -->
+# If MEMORY.md is missing OR still has unfilled {{placeholders}} from the repo template,
+# overwrite with a clean empty file so the bot doesn't hallucinate based on bad content
+MEMORY_FILE="${WORKSPACE}/memory/MEMORY.md"
+if [ ! -f "${MEMORY_FILE}" ] || grep -q '{{' "${MEMORY_FILE}" 2>/dev/null; then
+    cat > "${MEMORY_FILE}" <<'MEMEOF'
+# Long-Term Memory
+
+_Nothing stored yet. I will update this file when I learn something important._
 MEMEOF
+    echo "MEMORY.md reset to clean template."
 fi
 
-# Copy (not symlink) MEMORY.md to workspace root so the model finds it
-# regardless of whether it calls read_file("MEMORY.md") or read_file("memory/MEMORY.md")
-cp -f "${WORKSPACE}/memory/MEMORY.md" "${WORKSPACE}/MEMORY.md"
+# Copy to workspace root so the model finds it via read_file("MEMORY.md")
+cp -f "${MEMORY_FILE}" "${WORKSPACE}/MEMORY.md"
 
 rm -f "${PICOCLAW_HOME}/.picoclaw.pid"
 
