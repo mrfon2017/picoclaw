@@ -2,13 +2,13 @@
 
 ## 👤 USER IDENTITY
 - **User:** Шеф
-- **Core Interests:** {{Криптовалюта, трейдинг, AI-архитектура}}
-- **Communication:** {{Технический}}
+- **Core Interests:** Криптовалюта, трейдинг, AI-архитектура
+- **Communication:** Технический
 
 ## 🛠️ ENVIRONMENT & STACK
-- **OS/Platform:** {{Linux/Railway/Docker}}
-- **Main Tools:** {{Python, Go, PineScript, GitHub}}
-- **Active API Keys:** {{Список сервисов без самих ключей: Bybit, Polymarket, OpenAI}}
+- **OS/Platform:** Linux/Railway/Docker
+- **Main Tools:** Python, Go, PineScript, GitHub
+- **Active API Keys:** Список сервисов без самих ключей: Bybit, Polymarket, OpenAI
 
 ## 📑 KNOWLEDGE BASE (STABLE)
 > В этом разделе хранятся неизменные факты и инструкции.
