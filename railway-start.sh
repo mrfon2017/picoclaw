@@ -26,19 +26,32 @@ if [ -d "${DEFAULT_WORKSPACE}" ]; then
     done
 fi
 
-# Also place MEMORY.md at workspace root so the model can find it
-# regardless of whether it uses "MEMORY.md" or "memory/MEMORY.md"
-MEMORY_SRC="${WORKSPACE}/memory/MEMORY.md"
-MEMORY_ROOT="${WORKSPACE}/MEMORY.md"
-if [ -f "${MEMORY_SRC}" ] && [ ! -f "${MEMORY_ROOT}" ]; then
-    ln -sf "${MEMORY_SRC}" "${MEMORY_ROOT}"
+# Ensure memory dir and MEMORY.md always exist (bot crashes without them)
+mkdir -p "${WORKSPACE}/memory"
+if [ ! -f "${WORKSPACE}/memory/MEMORY.md" ]; then
+    cat > "${WORKSPACE}/memory/MEMORY.md" <<'MEMEOF'
+# Agent Long-Term Memory
+
+<!-- picoclaw writes important facts here between conversations -->
+MEMEOF
 fi
+
+# Symlink MEMORY.md to workspace root so the model finds it
+# whether it calls read_file("MEMORY.md") or read_file("memory/MEMORY.md")
+ln -sf "${WORKSPACE}/memory/MEMORY.md" "${WORKSPACE}/MEMORY.md" 2>/dev/null || true
 
 rm -f "${PICOCLAW_HOME}/.picoclaw.pid"
 
 # Force config regeneration if RESET_CONFIG=1 is set
 if [ "${RESET_CONFIG:-0}" = "1" ]; then
     rm -f "${PICOCLAW_HOME}/config.json"
+fi
+
+# Clear all sessions if CLEAR_SESSIONS=1 (fixes stuck/looping bot)
+if [ "${CLEAR_SESSIONS:-0}" = "1" ]; then
+    rm -rf "${PICOCLAW_HOME}/sessions"
+    mkdir -p "${PICOCLAW_HOME}/sessions"
+    echo "Sessions cleared."
 fi
 
 # Generate config.json if missing.
