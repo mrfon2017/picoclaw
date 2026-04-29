@@ -96,4 +96,11 @@ if [ ! -f "${PICOCLAW_HOME}/config.json" ]; then
 EOF
 fi
 
+# Debug: verify MEMORY.md exists before starting gateway
+echo "=== MEMORY.md check ==="
+ls -la "${WORKSPACE}/MEMORY.md" 2>&1 || echo "MISSING: ${WORKSPACE}/MEMORY.md"
+ls -la "${WORKSPACE}/memory/MEMORY.md" 2>&1 || echo "MISSING: ${WORKSPACE}/memory/MEMORY.md"
+echo "Workspace: $(ls ${WORKSPACE}/ 2>&1)"
+echo "======================"
+
 exec picoclaw gateway --allow-empty
