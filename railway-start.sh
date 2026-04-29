@@ -26,7 +26,7 @@ if [ -d "${DEFAULT_WORKSPACE}" ]; then
     done
 fi
 
-# Ensure memory dir and MEMORY.md always exist (bot crashes without them)
+# Ensure memory dir and MEMORY.md always exist
 mkdir -p "${WORKSPACE}/memory"
 if [ ! -f "${WORKSPACE}/memory/MEMORY.md" ]; then
     cat > "${WORKSPACE}/memory/MEMORY.md" <<'MEMEOF'
@@ -36,9 +36,9 @@ if [ ! -f "${WORKSPACE}/memory/MEMORY.md" ]; then
 MEMEOF
 fi
 
-# Symlink MEMORY.md to workspace root so the model finds it
-# whether it calls read_file("MEMORY.md") or read_file("memory/MEMORY.md")
-ln -sf "${WORKSPACE}/memory/MEMORY.md" "${WORKSPACE}/MEMORY.md" 2>/dev/null || true
+# Copy (not symlink) MEMORY.md to workspace root so the model finds it
+# regardless of whether it calls read_file("MEMORY.md") or read_file("memory/MEMORY.md")
+cp -f "${WORKSPACE}/memory/MEMORY.md" "${WORKSPACE}/MEMORY.md"
 
 rm -f "${PICOCLAW_HOME}/.picoclaw.pid"
 
@@ -48,9 +48,10 @@ if [ "${RESET_CONFIG:-0}" = "1" ]; then
 fi
 
 # Clear all sessions if CLEAR_SESSIONS=1 (fixes stuck/looping bot)
+# Sessions are stored inside workspace/sessions/, not PICOCLAW_HOME/sessions/
 if [ "${CLEAR_SESSIONS:-0}" = "1" ]; then
-    rm -rf "${PICOCLAW_HOME}/sessions"
-    mkdir -p "${PICOCLAW_HOME}/sessions"
+    rm -rf "${PICOCLAW_HOME}/workspace/sessions"
+    mkdir -p "${PICOCLAW_HOME}/workspace/sessions"
     echo "Sessions cleared."
 fi
 
