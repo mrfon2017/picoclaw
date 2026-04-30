@@ -30,14 +30,21 @@ fi
 mkdir -p "${WORKSPACE}/memory"
 
 # Reset MEMORY.md if: missing, has unfilled placeholders {{ or ( , or RESET_MEMORY=1
+# When resetting, prefer the default from the Docker image (custom template in repo)
 MEMORY_FILE="${WORKSPACE}/memory/MEMORY.md"
+DEFAULT_MEMORY="${DEFAULT_WORKSPACE}/memory/MEMORY.md"
 if [ ! -f "${MEMORY_FILE}" ] || grep -qE '\{\{|\(Important|\(User|\(Things|\(Model' "${MEMORY_FILE}" 2>/dev/null || [ "${RESET_MEMORY:-0}" = "1" ]; then
-    cat > "${MEMORY_FILE}" <<'MEMEOF'
+    if [ -f "${DEFAULT_MEMORY}" ]; then
+        cp -f "${DEFAULT_MEMORY}" "${MEMORY_FILE}"
+        echo "MEMORY.md restored from default template."
+    else
+        cat > "${MEMORY_FILE}" <<'MEMEOF'
 # Long-Term Memory
 
 _Nothing stored yet. I will update this file when I learn something important._
 MEMEOF
-    echo "MEMORY.md reset to clean template."
+        echo "MEMORY.md reset to fallback template."
+    fi
 fi
 
 # Copy to workspace root so the model finds it via read_file("MEMORY.md")
