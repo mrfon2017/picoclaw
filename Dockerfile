@@ -18,6 +18,8 @@ RUN apk add --no-cache ca-certificates tzdata curl
 
 COPY --from=builder /src/build/picoclaw /usr/local/bin/picoclaw
 COPY --from=builder /src/workspace /usr/local/share/picoclaw/workspace
+# Override with our custom workspace files (MEMORY.md, AGENT.md, etc.)
+COPY workspace/ /usr/local/share/picoclaw/workspace/
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY railway-start.sh /railway-start.sh
 RUN chmod +x /entrypoint.sh /railway-start.sh
