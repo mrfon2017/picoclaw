@@ -29,10 +29,9 @@ fi
 # Ensure memory dir exists
 mkdir -p "${WORKSPACE}/memory"
 
-# If MEMORY.md is missing OR still has unfilled {{placeholders}} from the repo template,
-# overwrite with a clean empty file so the bot doesn't hallucinate based on bad content
+# Reset MEMORY.md if: missing, has unfilled placeholders {{ or ( , or RESET_MEMORY=1
 MEMORY_FILE="${WORKSPACE}/memory/MEMORY.md"
-if [ ! -f "${MEMORY_FILE}" ] || grep -q '{{' "${MEMORY_FILE}" 2>/dev/null; then
+if [ ! -f "${MEMORY_FILE}" ] || grep -qE '\{\{|\(Important|\(User|\(Things|\(Model' "${MEMORY_FILE}" 2>/dev/null || [ "${RESET_MEMORY:-0}" = "1" ]; then
     cat > "${MEMORY_FILE}" <<'MEMEOF'
 # Long-Term Memory
 
